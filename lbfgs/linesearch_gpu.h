@@ -67,7 +67,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 
 	dispatch_dot(NX, &phi_prime_0, d_z, d_gk, false); // phi_prime_0 = z' * gk
 	
-#ifdef LBFGS_VERBOSE
+/* #ifdef LBFGS_VERBOSE
 	// Enable line search debugging
 	static int iteration = 0;
 	
@@ -85,7 +85,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 	CudaSafeCall( cudaMemcpy(&fk, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
 	
 	linesearchOutput << "0 " << fk << " " << phi_prime_0 << std::endl;
-#endif
+#endif */
 
 	if (phi_prime_0 >= 0.0)
 	{
