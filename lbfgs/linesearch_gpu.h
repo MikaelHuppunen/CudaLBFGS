@@ -138,14 +138,14 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		
 		dispatch_dot(NX, d_phi_prime_alpha, d_z, d_gk, true); // phi_prime_alpha = z' * gk;
 
-#ifdef LBFGS_VERBOSE
+/* #ifdef LBFGS_VERBOSE
 		float alpha, phi_prime_alpha;
 		CudaSafeCall( cudaMemcpyFromSymbol(&alpha, gpu_lbfgs::alpha_cur, sizeof(float)) );
 		CudaSafeCall( cudaMemcpy(&fk, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
 		CudaSafeCall( cudaMemcpy(&phi_prime_alpha, d_phi_prime_alpha, sizeof(float), cudaMemcpyDeviceToHost) );
 		
 		linesearchOutput << alpha << " " << fk << " " << phi_prime_alpha << std::endl;
-#endif
+#endif */
 
 		strongWolfePhase1<<<1,1>>>(second_iter);
 
@@ -214,14 +214,14 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		
 		dispatch_dot(NX, d_tmp, d_z, d_gk, true); // tmp = phi_prime_j = z' * gk;
 		
-#ifdef LBFGS_VERBOSE
+/* #ifdef LBFGS_VERBOSE
 		float alpha, phi_prime_alpha;
 		CudaSafeCall( cudaMemcpyFromSymbol(&alpha, gpu_lbfgs::alpha_cur, sizeof(float)) );
 		CudaSafeCall( cudaMemcpy(&fk, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
 		CudaSafeCall( cudaMemcpy(&phi_prime_alpha, d_tmp, sizeof(float), cudaMemcpyDeviceToHost) );
 		
 		linesearchOutput << alpha << " " << fk << " " << phi_prime_alpha << std::endl;
-#endif
+#endif */
 
 		strongWolfePhase2<<<1,1>>>(tries);
 
