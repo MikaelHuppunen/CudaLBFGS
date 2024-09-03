@@ -92,6 +92,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 #ifdef LBFGS_VERBOSE
 		std::cout << "Directional derivative at the starting point of the line search is nonnegative." << std::endl;
 #endif
+		std::cout << "Case 1\n";
 		stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
 		return false;
 	}
@@ -174,6 +175,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		// Coudln't find a viable minimum in the range [0, alpha_max=1e8]
 		if (ret == 3)
 		{
+			std::cout << "Case 2\n";
 			stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
 			return false;
 		}
@@ -193,7 +195,9 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		// to      (x + alpha     * z)
 
 		// xk += (alpha - alpha_old) * z;
-		dispatch_axpy(NX, d_x, d_x, d_z, d_alpha_correction, true);
+		std::cout << "tries: " << tries << '\n';
+		m_costFunction.f_gradf(d_x, d_fk, d_gk);
+		dispatch_axpy_debug(NX, d_x, d_x, d_z, d_alpha_correction, d_fk, d_gk, true);
 
 #ifdef LBFGS_TIMING
 		timer_linesearch->stop();
@@ -213,6 +217,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 #endif
 		
 		dispatch_dot(NX, d_tmp, d_z, d_gk, true); // tmp = phi_prime_j = z' * gk;
+		m_costFunction.f_gradf(d_x, d_fk, d_gk);
 		
 /* #ifdef LBFGS_VERBOSE
 		float alpha, phi_prime_alpha;
@@ -240,6 +245,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		if (ret == 2)
 		{
 			// The search interval has become too small
+			std::cout << "Case 3\n";
 			stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
 			return false;
 		}

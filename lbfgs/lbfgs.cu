@@ -365,6 +365,27 @@ void lbfgs::dispatch_axpy(const size_t n, float *d_dst, const float *d_y, const 
 	CublasSafeCall( cublasSaxpy(m_cublasHandle, int(n), a, d_x, 1, d_dst, 1) );
 }
 
+void lbfgs::dispatch_axpy_debug(const size_t n, float *d_dst, const float *d_y, const float *d_x, const float *a, float *d_fk, float *d_gk, bool aDevicePointer) const
+{	
+	const cublasPointerMode_t mode = aDevicePointer ? CUBLAS_POINTER_MODE_DEVICE
+													: CUBLAS_POINTER_MODE_HOST;
+
+	CublasSafeCall( cublasSetPointerMode(m_cublasHandle, mode) );
+
+	if (d_dst != d_y)
+		CudaSafeCall( cudaMemcpy(d_dst, d_y, n * sizeof(float), cudaMemcpyDeviceToDevice) );
+
+	std::cout << "p1\n";
+	m_costFunction.f_gradf(d_dst, d_fk, d_gk);
+	std::cout << "p2\n";
+	m_costFunction.f_gradf(d_y, d_fk, d_gk);
+	CublasSafeCall( cublasSaxpy(m_cublasHandle, int(n), a, d_x, 1, d_dst, 1) );
+	std::cout << "p3\n";
+	m_costFunction.f_gradf(d_dst, d_fk, d_gk);
+	std::cout << "p4\n";
+	m_costFunction.f_gradf(d_y, d_fk, d_gk);
+}
+
 void lbfgs::dispatch_scale(const size_t n, float *d_dst, const float *d_x, const float *a, bool aDevicePointer) const
 {
 	const cublasPointerMode_t mode = aDevicePointer ? CUBLAS_POINTER_MODE_DEVICE

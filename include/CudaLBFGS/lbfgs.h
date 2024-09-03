@@ -130,6 +130,7 @@ private:
 	// All other pointers (marked with a d_) must point to device memory.
 
 	void dispatch_axpy (const size_t n, float *d_dst, const float *d_y, const float *d_x, const float *a, bool aDevicePointer   = true) const;
+	void dispatch_axpy_debug (const size_t n, float *d_dst, const float *d_y, const float *d_x, const float *a, float *d_fk, float *d_gk, bool aDevicePointer   = true) const;
 	void dispatch_scale(const size_t n, float *d_dst, const float *d_x,                   const float *a, bool aDevicePointer   = true) const;
 	void dispatch_dot  (const size_t n, float *dst,   const float *d_x, const float *d_y,                 bool dstDevicePointer = true) const;
 
