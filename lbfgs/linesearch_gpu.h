@@ -176,6 +176,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 			if(F > F_original){
 				std::cout << "Higher energy!\n";
 				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
 			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return true;
@@ -191,6 +192,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 			std::cout << "Energy1: " << F << "!" << '\n';
 			if(F > F_original){
 				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
 			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
@@ -211,6 +213,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 			std::cout << "Energy1: " << F << "!" << '\n';
 			if(F > F_original){
 				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
 			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
@@ -279,6 +282,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 			std::cout << "Energy1: " << F << "!" << '\n';
 			if(F > F_original){
 				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
 			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return true;
@@ -295,6 +299,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 			std::cout << "Energy1: " << F << "!" << '\n';
 			if(F > F_original){
 				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
 			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
@@ -310,6 +315,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 			std::cout << "Energy1: " << F << "!" << '\n';
 			if(F > F_original){
 				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
 			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
