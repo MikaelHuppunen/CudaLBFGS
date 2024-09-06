@@ -24,7 +24,6 @@
 
 #include <fstream>
 #include <sstream>
-#include <iomanip>
 
 namespace gpu_lbfgs
 {
