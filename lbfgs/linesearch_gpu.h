@@ -59,9 +59,16 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 						   lbfgs::status &stat, float *step, size_t maxEvals,
 						   timer *timer_evals, timer *timer_linesearch,
 						   float *d_tmp, int *d_status)
-{
+{	
 	using namespace gpu_lbfgs;
 	const size_t NX = m_costFunction.getNumberOfUnknowns();
+	//save backups of the original d_x and d_fk
+	float *d_x_original;
+	CudaSafeCall( cudaMalloc((void**)&d_x_original, NX * sizeof(float)) );
+	CudaSafeCall( cudaMemcpy(d_x_original, d_x, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+
+	float F = 0.0f, F_original = 0.0f;
+	CudaSafeCall( cudaMemcpy(&F_original, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
 
 	float phi_prime_0;
 
@@ -93,6 +100,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		std::cout << "Directional derivative at the starting point of the line search is nonnegative." << std::endl;
 #endif
 		stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
+		CudaSafeCall( cudaFree(d_x_original) );
 		return false;
 	}
 
@@ -158,12 +166,24 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		// If both Armijo and Strong Wolfe hold, we're done
 		if (ret == 1)
 		{
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
+			}
+			CudaSafeCall( cudaFree(d_x_original) );
 			return true;
 		}
 
 		if (evals >= maxEvals)
 		{
 			stat = lbfgs::LBFGS_REACHED_MAX_EVALS;
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
+			}
+			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
 		}
 
@@ -175,6 +195,12 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		if (ret == 3)
 		{
 			stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
+			}
+			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
 		}
 
@@ -234,6 +260,12 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		if (ret == 1)
 		{
 			// The Armijo and Strong Wolfe conditions hold
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
+			}
+			CudaSafeCall( cudaFree(d_x_original) );
 			return true;
 		}
 
@@ -241,16 +273,28 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		{
 			// The search interval has become too small
 			stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
+			}
+			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
 		}
 
 		if (evals >= maxEvals)
 		{
-			stat = lbfgs::LBFGS_REACHED_MAX_EVALS;
+			stat = lbfgs::LBFGS_REACHED_MAX_EVALS;	
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(float), cudaMemcpyHostToDevice) );
+			}
+			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
 		}
 	}
-
+	CudaSafeCall( cudaFree(d_x_original) );
 	// We don't get here
 }
 
