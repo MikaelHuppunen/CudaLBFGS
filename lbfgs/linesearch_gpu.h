@@ -63,9 +63,13 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 {	
 	using namespace gpu_lbfgs;
 	const size_t NX = m_costFunction.getNumberOfUnknowns();
+	//save backups of the original d_x and d_fk
 	float *d_x_original;
 	CudaSafeCall( cudaMalloc((void**)&d_x_original, NX * sizeof(float)) );
 	CudaSafeCall( cudaMemcpy(d_x_original, d_x, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+
+	float F = 0.0f, F_original = 0.0f;
+	CudaSafeCall( cudaMemcpy(&F_original, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
 
 	float phi_prime_0;
 
@@ -98,7 +102,6 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 #endif
 		std::cout << "Case 1\n";
 		stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
-		CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
 		CudaSafeCall( cudaFree(d_x_original) );
 		return false;
 	}
@@ -132,10 +135,6 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 #endif
 
 		m_costFunction.f_gradf(d_x, d_fk, d_gk);
-		float F = 0.0f;
-    	CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
-		std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
-		std::cout << "Energy: " << F << "!" << '\n';
 
 		CudaCheckError();
 		cudaDeviceSynchronize();
@@ -169,13 +168,30 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		// If both Armijo and Strong Wolfe hold, we're done
 		if (ret == 1)
 		{
+			std::cout << "case 0\n";
+			std::cout << "Energy0: " << F_original << "!" << '\n';
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
+			std::cout << "Energy1: " << F << "!" << '\n';
+			if(F > F_original){
+				std::cout << "Higher energy!\n";
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return true;
 		}
 
 		if (evals >= maxEvals)
 		{
+			std::cout << "case 1\n";
 			stat = lbfgs::LBFGS_REACHED_MAX_EVALS;
+			std::cout << "Energy0: " << F_original << "!" << '\n';
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
+			std::cout << "Energy1: " << F << "!" << '\n';
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
 		}
@@ -189,7 +205,13 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		{
 			std::cout << "Case 2\n";
 			stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
-			CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+			std::cout << "Energy0: " << F_original << "!" << '\n';
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
+			std::cout << "Energy1: " << F << "!" << '\n';
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
 		}
@@ -217,10 +239,6 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 #endif
 
 		m_costFunction.f_gradf(d_x, d_fk, d_gk);
-		float F = 0.0f;
-    	CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
-		std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
-		std::cout << "Energy: " << F << "!" << '\n';
 
 		CudaCheckError();
 		cudaDeviceSynchronize();
@@ -253,7 +271,15 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 
 		if (ret == 1)
 		{
+			std::cout << "case 3\n";
 			// The Armijo and Strong Wolfe conditions hold
+			std::cout << "Energy0: " << F_original << "!" << '\n';
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
+			std::cout << "Energy1: " << F << "!" << '\n';
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return true;
 		}
@@ -261,16 +287,30 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		if (ret == 2)
 		{
 			// The search interval has become too small
-			std::cout << "Case 3\n";
+			std::cout << "Case 4\n";
 			stat = lbfgs::LBFGS_LINE_SEARCH_FAILED;
-			CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+			std::cout << "Energy0: " << F_original << "!" << '\n';
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
+			std::cout << "Energy1: " << F << "!" << '\n';
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
 		}
 
 		if (evals >= maxEvals)
 		{
-			stat = lbfgs::LBFGS_REACHED_MAX_EVALS;
+			std::cout << "case 5\n";
+			stat = lbfgs::LBFGS_REACHED_MAX_EVALS;	
+			std::cout << "Energy0: " << F_original << "!" << '\n';
+			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+			std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
+			std::cout << "Energy1: " << F << "!" << '\n';
+			if(F > F_original){
+				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
+			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return false;
 		}
