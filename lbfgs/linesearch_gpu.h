@@ -24,6 +24,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
 namespace gpu_lbfgs
 {
@@ -131,6 +132,10 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 #endif
 
 		m_costFunction.f_gradf(d_x, d_fk, d_gk);
+		float F = 0.0f;
+    	CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+		std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
+		std::cout << "Energy: " << F << "!" << '\n';
 
 		CudaCheckError();
 		cudaDeviceSynchronize();
@@ -204,9 +209,7 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 		// to      (x + alpha     * z)
 
 		// xk += (alpha - alpha_old) * z;
-		std::cout << "tries: " << tries << '\n';
-		m_costFunction.f_gradf(d_x, d_fk, d_gk);
-		dispatch_axpy_debug(NX, d_x, d_x, d_z, d_alpha_correction, d_fk, d_gk, true);
+		dispatch_axpy(NX, d_x, d_x, d_z, d_alpha_correction, true);
 
 #ifdef LBFGS_TIMING
 		timer_linesearch->stop();
@@ -214,6 +217,10 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 #endif
 
 		m_costFunction.f_gradf(d_x, d_fk, d_gk);
+		float F = 0.0f;
+    	CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+		std::cout << std::fixed << std::setprecision(std::numeric_limits<float>::digits10 + 1);
+		std::cout << "Energy: " << F << "!" << '\n';
 
 		CudaCheckError();
 		cudaDeviceSynchronize();
@@ -226,7 +233,6 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, float *d_fk, float *d_gk,
 #endif
 		
 		dispatch_dot(NX, d_tmp, d_z, d_gk, true); // tmp = phi_prime_j = z' * gk;
-		m_costFunction.f_gradf(d_x, d_fk, d_gk);
 		
 /* #ifdef LBFGS_VERBOSE
 		float alpha, phi_prime_alpha;
