@@ -18,7 +18,7 @@
 #include "cost_function.h"
 #include "error_checking.h"
 
-void cpu_cost_function::f_gradf(const float *d_x, float *d_f, float *d_gradf)
+void cpu_cost_function::f_gradf(const float *d_x, double *d_f, float *d_gradf)
 {
 	// Copy device x to host memory
 	CudaSafeCall( cudaMemcpy(m_h_x, d_x, m_numDimensions * sizeof(float), cudaMemcpyDeviceToHost) );

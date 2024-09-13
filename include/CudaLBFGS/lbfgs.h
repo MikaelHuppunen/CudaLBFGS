@@ -134,8 +134,8 @@ private:
 	void dispatch_dot  (const size_t n, float *dst,   const float *d_x, const float *d_y,                 bool dstDevicePointer = true) const;
 
 	bool gpu_linesearch(float *d_x, float *d_z,
-					    float *d_fk, float *d_gk, size_t &evals, const float *d_gkm1,
-					    float *d_fkm1, lbfgs::status &stat, float *step, size_t maxEvals,
+					    double *d_fk, float *d_gk, size_t &evals, const float *d_gkm1,
+					    double *d_fkm1, lbfgs::status &stat, float *step, size_t maxEvals,
 					    timer *timer_evals, timer *timer_linesearch, float *d_tmp, int *d_status);
 
 	static inline size_t index(size_t indexIn) { return indexIn % HISTORY_SIZE; }

@@ -54,7 +54,7 @@ public:
 	
 	// Implement this method computing both function value d_f
 	// and gradient d_gradf of your cost function at point d_x.
-	virtual void f_gradf(const float *d_x, float *d_f, float *d_gradf) = 0;
+	virtual void f_gradf(const float *d_x, double *d_f, float *d_gradf) = 0;
 
 	size_t getNumberOfUnknowns() const
 	{
@@ -85,7 +85,7 @@ public:
 
 	virtual void cpu_f_gradf(const floatdouble *h_x, floatdouble *h_f, floatdouble *h_gradf) = 0;
 
-	void f_gradf(const float *d_x, float *d_f, float *d_gradf);
+	void f_gradf(const float *d_x, double *d_f, float *d_gradf);
 
 private:
 	float *m_h_x;

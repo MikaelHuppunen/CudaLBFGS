@@ -34,8 +34,8 @@ namespace gpu_lbfgs {
 
 	// Variables
 
-	__device__ float fkm1;
-	__device__ float fk;
+	__device__ double fkm1;
+	__device__ double fk;
 	__device__ float tmp;
 
 	__device__ float alpha[HISTORY_SIZE];
@@ -125,7 +125,7 @@ lbfgs::status lbfgs::gpu_lbfgs(float *d_x)
 	using namespace gpu_lbfgs;
 	const size_t NX = m_costFunction.getNumberOfUnknowns();
 
-	float *d_fkm1, *d_fk;  // f_{k-1}, f_k, function values at x_{k-1} and x_k
+	double *d_fkm1, *d_fk;  // f_{k-1}, f_k, function values at x_{k-1} and x_k
 	float *d_gkm1, *d_gk;  // g_{k-1}, g_k, gradients       at x_{k-1} and x_k
 	float *d_z;            // z,            search direction
 	float *d_H0;           // H_0,          initial inverse Hessian (diagonal, same value for all elements)
@@ -194,8 +194,8 @@ lbfgs::status lbfgs::gpu_lbfgs(float *d_x)
 	for (it = 0; it < m_maxIter; ++it)
 	{
 #ifdef LBFGS_VERBOSE
-		float  h_y;
-		CudaSafeCall( cudaMemcpy(&h_y, d_fk, sizeof(float), cudaMemcpyDeviceToHost) );
+		double  h_y;
+		CudaSafeCall( cudaMemcpy(&h_y, d_fk, sizeof(double), cudaMemcpyDeviceToHost) );
 
 		float gknorm2;
 		dispatch_dot(NX, &gknorm2, d_gk, d_gk, false);
@@ -271,7 +271,7 @@ lbfgs::status lbfgs::gpu_lbfgs(float *d_x)
 		timer_linesearch.start();
 #endif
 
-		CudaSafeCall( cudaMemcpy(d_fkm1, d_fk, 1  * sizeof(float), cudaMemcpyDeviceToDevice) ); // fkm1 = fk;
+		CudaSafeCall( cudaMemcpy(d_fkm1, d_fk, 1  * sizeof(double), cudaMemcpyDeviceToDevice) ); // fkm1 = fk;
 		CudaSafeCall( cudaMemcpy(d_gkm1, d_gk, NX * sizeof(float), cudaMemcpyDeviceToDevice) ); // gkm1 = gk;
 
 		timer *t_evals = NULL, *t_linesearch = NULL;
