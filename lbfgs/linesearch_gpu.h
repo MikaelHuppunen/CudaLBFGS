@@ -167,10 +167,6 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, double *d_fk, float *d_gk,
 		if (ret == 1)
 		{
 			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(double), cudaMemcpyDeviceToHost) );
-			if(F > F_original){
-				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
-				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(double), cudaMemcpyHostToDevice) );
-			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return true;
 		}
@@ -261,10 +257,6 @@ bool lbfgs::gpu_linesearch(float *d_x, float *d_z, double *d_fk, float *d_gk,
 		{
 			// The Armijo and Strong Wolfe conditions hold
 			CudaSafeCall( cudaMemcpy(&F, d_fk, sizeof(double), cudaMemcpyDeviceToHost) );
-			if(F > F_original){
-				CudaSafeCall( cudaMemcpy(d_x, d_x_original, NX * sizeof(float), cudaMemcpyDeviceToDevice) );
-				CudaSafeCall( cudaMemcpy(d_fk, &F_original, sizeof(double), cudaMemcpyHostToDevice) );
-			}
 			CudaSafeCall( cudaFree(d_x_original) );
 			return true;
 		}
